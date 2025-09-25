@@ -1,0 +1,32 @@
+[
+  {
+    "date": "2025-07-16",
+    "temperatureC": 52,
+    "temperatureF": 125,
+    "summary": "Mild"
+  },
+  {
+    "date": "2025-07-17",
+    "temperatureC": 36,
+    "temperatureF": 96,
+    "summary": "Warm"
+  },
+  {
+    "date": "2025-07-18",
+    "temperatureC": 39,
+    "temperatureF": 102,
+    "summary": "Cool"
+  },
+  {
+    "date": "2025-07-19",
+    "temperatureC": 10,
+    "temperatureF": 49,
+    "summary": "Bracing"
+  },
+  {
+    "date": "2025-07-20",
+    "temperatureC": -1,
+    "temperatureF": 31,
+    "summary": "Chilly"
+  }
+]
