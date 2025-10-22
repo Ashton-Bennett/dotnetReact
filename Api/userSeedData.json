@@ -1,0 +1,36 @@
+
+  [
+    {
+      "Id": 1,
+      "Username": "admin_user",
+      "Roles": [ "Admin" ],
+      "Password": "AdminPass123!",
+      "DateOfBirth": "1980-01-15",
+      "Email": "admin@SeedData.com"
+    },
+    {
+      "Id": 2,
+      "Username": "manager_john",
+      "Roles": [ "Manager" ],
+      "Password": "ManagerPass123!",
+      "DateOfBirth": "1985-05-22",
+      "Email": "manager@SeedData.com"
+    },
+    {
+      "Id": 3,
+      "Username": "user_sarah",
+      "Roles": [ "User" ],
+      "Password": "UserPass123!",
+      "DateOfBirth": "1990-09-12",
+      "Email": "user@SeedData.com"
+    },
+    {
+      "Id": 4,
+      "Username": "guest_mike",
+      "Roles": [ "Guest" ],
+      "Password": "GuestPass123!",
+      "DateOfBirth": "2000-03-08",
+      "Email": "guest@SeedData.com"
+    }
+  ]
+

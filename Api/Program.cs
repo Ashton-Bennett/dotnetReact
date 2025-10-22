@@ -1,13 +1,15 @@
+using Api.Authorization;
 using Api.Data;
 using Api.Models;
 using Api.Repositories;
 using Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,11 +54,12 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddScoped<IWeatherRepository, WeatherRepository>();
-builder.Services.AddScoped<IWeatherService, WeatherService>();
-
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+
+builder.Services.AddScoped<ITokenService, TokenService>();
+
+builder.Services.AddSingleton<IAuthorizationHandler, AdminOrSelfHandler>();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -79,14 +82,43 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("RequireAdministratorRole",
-         policy => policy.RequireRole("Administrator"));
+         policy => policy.RequireRole("Admin"));
+
+    options.AddPolicy("AdminOrSelf", policy =>
+        policy.Requirements.Add(new AdminOrSelfRequirement()));
 });
 
 
 var app = builder.Build();
 
-// Use this to authenticate the use of endpoint points that require Administrator role. 
-Console.WriteLine("Swagger Admin Token:" + TokenGeneratorForTesting.Generate(builder, "Administrator"));
+using (var scope = app.Services.CreateScope())
+{
+    var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+    // Use this to authenticate the use of endpoint points that require Admin role. 
+    //User fakeAdminUser = new User
+    //{
+    //    Email = "test@test.com",
+    //    Username = "ashtonb",
+    //    Roles = new List<string> { "Admin" },
+    //    Id = 123
+    //};
+
+    //string token = tokenService.GenerateAccessToken(fakeAdminUser);
+    //Console.WriteLine("Swagger Admin Token:" + token);
+
+    // Use this to authenticate the use of endpoint points that require guest role. 
+    User fakeGuestUser = new User
+    {
+        Email = "guest@SeedData.com",
+        Username = "guest_mike",
+        Roles = new List<string> { "Guest" },
+        Id = 4
+    };
+
+    string token = tokenService.GenerateAccessToken(fakeGuestUser);
+    Console.WriteLine("Swagger Guest Token:" + token);
+}
 
 app.UseCors();
 app.UseAuthentication();
@@ -118,23 +150,57 @@ app.UseAuthorization();
 app.MapStaticAssets();
 app.MapControllers();
 
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}"
+);
+
+app.UseExceptionHandler("/error");
+
+app.Map("/error", (HttpContext context) =>
+{
+    var feature = context.Features.Get<IExceptionHandlerFeature>();
+    var exception = feature?.Error;
+
+    var statusCode = exception switch
+    {
+        ArgumentException => StatusCodes.Status400BadRequest,
+        KeyNotFoundException => StatusCodes.Status404NotFound,
+        UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
+        _ => StatusCodes.Status500InternalServerError
+    };
+
+    var result = new
+    {
+        message = exception?.Message ?? "An unexpected error occurred.",
+        statusCode = statusCode,
+        timestamp = DateTime.UtcNow
+    };
+
+    context.Response.ContentType = "application/json";
+    context.Response.StatusCode = statusCode;
+
+    return Results.Json(result);
+});
+
+
 app.UseStatusCodePagesWithReExecute("/Error/{0}");
 
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    if (!db.WeatherForecasts.Any())
+    if (!db.Users.Any())
     {
-        var json = File.ReadAllText("seedData.json"); // save your JSON in this file
+        var json = File.ReadAllText("userSeedData.json"); // save your JSON in this file
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         };
 
-        var forecasts = JsonSerializer.Deserialize<List<WeatherForecast>>(json, options);
+        var users = JsonSerializer.Deserialize<List<User>>(json, options);
 
-        db.WeatherForecasts.AddRange(forecasts!);
+        db.Users.AddRange(users!);
         db.SaveChanges();
     }
 }

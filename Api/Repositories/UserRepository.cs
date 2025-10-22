@@ -26,5 +26,24 @@ namespace Api.Repositories
             await _context.SaveChangesAsync();
             return result.Entity;
         }
+
+        public async Task DeleteAsync(User userToDelete)
+        {
+            _context.Users.Remove(userToDelete);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task SaveChangesAsync() =>
+            await _context.SaveChangesAsync();
+
+        public async Task<User?> GetByUsernameAndPasswordAsync(string email, string password) =>
+            await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == email && u.Password == password);
+
+        public async Task<User?> GetByRefreshTokenAsync(string refreshToken)
+        {
+            var users = await GetAllAsync();
+            return users.FirstOrDefault(u => u.RefreshToken == refreshToken);
+        }
     }
 }

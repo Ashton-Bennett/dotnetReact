@@ -1,0 +1,50 @@
+:root {
+  /*-----Text colors (brand)------*/
+  --primary-color-1: hsl(207, 80%, 37%);
+  --primary-color-2: hsl(207, 63%, 43%);
+  --primary-color-3: hsl(207, 68%, 59%);
+  --primary-color-4: hsl(206, 82%, 60%);
+  --primary-color-5: hsl(208, 61%, 87%);
+  --primary-color-6: hsl(208, 61%, 91%);
+  --primary-color-7: hsl(204, 89%, 93%);
+  --primary-color-8: hsl(203, 100%, 95%);
+  --primary-color-9: hsl(210, 50%, 96%);
+
+  /*-----Text colors (content)------*/
+  --color-shade-1: hsl(0, 0%, 33%);
+  --color-shade-2: hsl(0, 0%, 50%);
+  --color-shade-3: hsl(0, 0%, 57%);
+  --color-shade-4: hsl(0, 0%, 60%);
+  --color-shade-5: hsl(0, 0%, 64%);
+  --color-shade-6: hsl(0, 0%, 67%);
+  --color-shade-7: hsl(0, 0%, 75%);
+  --color-shade-8: hsl(0, 0%, 85%);
+  --color-shade-9: hsl(0, 0%, 89%);
+  --color-shade-10: hsl(0, 0%, 95%);
+  --color-shade-11: hsl(0, 0%, 96%);
+  --color-shade-12: hsl(0, 0%, 97%);
+  --color-shade-13: hsl(0, 0%, 100%);
+
+  /*-----Text colors (semantic)------*/
+  --color-danger-1: hsl(357, 72%, 45%);
+  --color-danger-2: hsl(357, 61%, 88%);
+  --color-danger-3: hsl(0, 61%, 91%);
+  --color-danger-4: hsl(0, 62%, 95%);
+  --color-warning-1: hsl(32, 92%, 55%);
+  --color-warning-2: hsl(33, 94%, 94%);
+  --color-success-1: hsl(165, 54%, 47%);
+  --color-success-2: hsl(141, 91%, 70%);
+  --color-success-3: hsl(150, 100%, 44%);
+
+  --primary-gradient: linear-gradient(
+    to bottom,
+    var(--primary-color),
+    var(--primary-color-4),
+    var(--primary-color-6)
+  );
+  --primary-2-gradient: linear-gradient(
+    to bottom,
+    var(--primary-color),
+    var(--primary-color-4)
+  );
+}
