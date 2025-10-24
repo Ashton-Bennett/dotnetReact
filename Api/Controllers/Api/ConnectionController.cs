@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 namespace reactTestApp.Controllers.Api
 {
     [ApiController]
-    [Route("api/Greetings")]
-    public class GreetingController : ControllerBase
+    [Route("api/Connection")]
+    public class ConnectionController : ControllerBase
     {
-        private readonly ILogger<GreetingController> _logger;
+        private readonly ILogger<ConnectionController> _logger;
 
-        public GreetingController(ILogger<GreetingController> logger)
+        public ConnectionController(ILogger<ConnectionController> logger)
         {
             _logger = logger;
         }

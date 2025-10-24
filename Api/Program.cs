@@ -1,11 +1,11 @@
 using Api.Authorization;
 using Api.Data;
+using Api.Middleware;
 using Api.Models;
 using Api.Repositories;
 using Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -91,115 +91,80 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+// Exception handling should be first
+app.UseExceptionHandler("/error");
 
-    // Use this to authenticate the use of endpoint points that require Admin role. 
-    //User fakeAdminUser = new User
-    //{
-    //    Email = "test@test.com",
-    //    Username = "ashtonb",
-    //    Roles = new List<string> { "Admin" },
-    //    Id = 123
-    //};
-
-    //string token = tokenService.GenerateAccessToken(fakeAdminUser);
-    //Console.WriteLine("Swagger Admin Token:" + token);
-
-    // Use this to authenticate the use of endpoint points that require guest role. 
-    User fakeGuestUser = new User
-    {
-        Email = "guest@SeedData.com",
-        Username = "guest_mike",
-        Roles = new List<string> { "Guest" },
-        Id = 4
-    };
-
-    string token = tokenService.GenerateAccessToken(fakeGuestUser);
-    Console.WriteLine("Swagger Guest Token:" + token);
-}
-
+// Logging middleware early so it captures all requests
+app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseHttpsRedirection();
+app.MapStaticAssets();
+app.UseRouting();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Configure the HTTP request pipeline.
+// Swagger (only in dev)
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    app.UseSwagger(); // Generates swagger.json
+    app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Test API");
-        options.RoutePrefix = ""; // URL: /swagger
+        options.RoutePrefix = "";
         options.DocumentTitle = "Test API Docs";
-        options.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List); // optional
+        options.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
     });
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        // Use this to authenticate the use of endpoint points that require Admin role. 
+        //User fakeAdminUser = new User
+        //{
+        //    Email = "test@test.com",
+        //    Username = "ashtonb",
+        //    Roles = new List<string> { "Admin" },
+        //    Id = 123
+        //};
+
+        //string token = tokenService.GenerateAccessToken(fakeAdminUser);
+        //Console.WriteLine("Swagger Admin Token:" + token);
+
+        // Use this to authenticate the use of endpoint points that require guest role.
+        User fakeGuestUser = new User
+        {
+            Email = "guest@SeedData.com",
+            Username = "guest_mike",
+            Roles = new List<string> { "Guest" },
+            Id = 4
+        };
+        string token = tokenService.GenerateAccessToken(fakeGuestUser); 
+        Console.WriteLine("Swagger Guest Token:" + token);
+    }
 }
 else
 {
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
-app.UseRouting();
-app.UseAuthorization();
-app.MapStaticAssets();
 app.MapControllers();
-
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}"
 );
 
-app.UseExceptionHandler("/error");
-
-app.Map("/error", (HttpContext context) =>
-{
-    var feature = context.Features.Get<IExceptionHandlerFeature>();
-    var exception = feature?.Error;
-
-    var statusCode = exception switch
-    {
-        ArgumentException => StatusCodes.Status400BadRequest,
-        KeyNotFoundException => StatusCodes.Status404NotFound,
-        UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
-        _ => StatusCodes.Status500InternalServerError
-    };
-
-    var result = new
-    {
-        message = exception?.Message ?? "An unexpected error occurred.",
-        statusCode = statusCode,
-        timestamp = DateTime.UtcNow
-    };
-
-    context.Response.ContentType = "application/json";
-    context.Response.StatusCode = statusCode;
-
-    return Results.Json(result);
-});
-
-
-app.UseStatusCodePagesWithReExecute("/Error/{0}");
-
+// DB seed data
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
     if (!db.Users.Any())
     {
-        var json = File.ReadAllText("userSeedData.json"); // save your JSON in this file
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-
+        var json = File.ReadAllText("userSeedData.json");
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         var users = JsonSerializer.Deserialize<List<User>>(json, options);
-
         db.Users.AddRange(users!);
         db.SaveChanges();
     }
