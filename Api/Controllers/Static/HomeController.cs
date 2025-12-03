@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using Api.Models;
+using Api.Models.DTOs;
 
 namespace reactTestApp.Controllers.Static
 {

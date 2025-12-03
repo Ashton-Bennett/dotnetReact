@@ -6,17 +6,15 @@ namespace reactTestApp.Controllers.Api
     [Route("api/Connection")]
     public class ConnectionController : ControllerBase
     {
-        private readonly ILogger<ConnectionController> _logger;
 
-        public ConnectionController(ILogger<ConnectionController> logger)
+        public ConnectionController()
         {
-            _logger = logger;
+
         }
 
         [HttpGet]
         public IActionResult Get()
         {
-            _logger.LogInformation("----------> GET: Initial backend test message sent");
             return Ok(new { message = "Connected." });
         }
     }

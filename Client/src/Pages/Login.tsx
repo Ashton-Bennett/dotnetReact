@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
-import React from "react";
+import UserService from "../api/userService";
+import connectionService from "../api/connectionService";
+import AuthService from "../api/authService";
+import isSuccessResponse from "../utilities/isSuccessResponse";
+import useAuth from "../hooks/AuthContext";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Login = () => {
   const [confirmBackendMessage, setConfirmBackendMessage] =
@@ -8,22 +13,65 @@ const Login = () => {
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [isCreateForm, setIsCreateForm] = useState<boolean>(false);
+  const { storeLogin } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as { from?: string } | null;
+
+  let from = state?.from || "/";
+  if (from.toLowerCase() === "/login") {
+    from = "/";
+  }
 
   useEffect(() => {
-    const fetchMessage = async () => {
+    const getMessage = async () => {
       try {
-        const res = await fetch("/api/greetings");
-        if (!res.ok) throw new Error("Network response was not ok");
-        const data = await res.json();
-        setConfirmBackendMessage(data.message);
+        const res = await connectionService.testBackend();
+        setConfirmBackendMessage(res.data.message);
       } catch (err) {
         console.error("Fetch error:", err);
         setConfirmBackendMessage("Unable to connect");
       }
     };
 
-    fetchMessage();
+    getMessage();
   }, []);
+
+  const createUser = async () => {
+    try {
+      const response = await UserService.create({ email, password });
+      if (isSuccessResponse(response)) {
+        setIsCreateForm(false);
+        loginHandler();
+      } else {
+        setError("Sorry unable to create user. Please try again.");
+      }
+    } catch (err) {
+      setError(
+        // @ts-ignore
+        err.response?.data?.message || "An unexpected error occurred."
+      );
+    }
+  };
+
+  const loginHandler = async () => {
+    try {
+      const response = await AuthService.login({ email, password });
+      if (isSuccessResponse(response)) {
+        storeLogin(response.data.accessToken, response.data);
+        navigate(from, { replace: true });
+      } else {
+        setError(
+          "Sorry unable to login. Please check your email and password then try again."
+        );
+      }
+    } catch (err) {
+      setError(
+        // @ts-ignore
+        err.response?.data?.message || "An unexpected error occurred."
+      );
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -32,25 +80,14 @@ const Login = () => {
       setError("Please enter both email and password.");
       return;
     }
-    const createUser = async () => {
-      try {
-        const response = await fetch("/api/User/Create", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: email, password }),
-        });
-        if (!response.ok)
-          throw new Error("Sorry! Unable to create user. Please try again.");
-        const data = await response.json();
-        console.log(data);
-      } catch (err) {
-        console.error("Fetch error:", err);
-        setError(err.message || "An unexpected error occurred.");
-      }
-    };
+
+    if (isCreateForm) {
+      createUser();
+    } else {
+      loginHandler();
+    }
 
     setError("");
-    createUser();
   };
 
   const toggleCreateAccount = () => {
@@ -59,6 +96,7 @@ const Login = () => {
 
   return (
     <section className="column center full-view-height">
+      <header>Backend is: {confirmBackendMessage}</header>
       <form
         onSubmit={handleSubmit}
         className="column f-gap-4 white-border p-4 radius center mx-wd-350"
@@ -89,8 +127,6 @@ const Login = () => {
         </button>
         <button type="submit"> {isCreateForm ? "Create" : "Login"}</button>
       </form>
-
-      <footer className="footer">Backend is: {confirmBackendMessage}</footer>
     </section>
   );
 };

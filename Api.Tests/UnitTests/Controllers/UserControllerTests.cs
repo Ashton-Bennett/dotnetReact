@@ -1,5 +1,5 @@
 ﻿using Api.Controllers.Api;
-using Api.Models;
+using Api.Models.Data;
 using Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Moq;

@@ -1,5 +1,5 @@
 ﻿using Api.Data;
-using Api.Models;
+using Api.Models.Data;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -20,6 +20,12 @@ namespace Api.Repositories
         public async Task<User?> GetByIdAsync(int id) =>
             await _context.Users.FindAsync(id);
 
+        public async Task<User?> GetByEmailAsync(string email)
+        {
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == email);
+        }
+
         public async Task<User> CreateAsync(User newUser)
         {
             var result = await _context.Users.AddAsync(newUser);
@@ -36,14 +42,20 @@ namespace Api.Repositories
         public async Task SaveChangesAsync() =>
             await _context.SaveChangesAsync();
 
-        public async Task<User?> GetByUsernameAndPasswordAsync(string email, string password) =>
-            await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == email && u.Password == password);
-
         public async Task<User?> GetByRefreshTokenAsync(string refreshToken)
         {
             var users = await GetAllAsync();
             return users.FirstOrDefault(u => u.RefreshToken == refreshToken);
+        }
+
+        public async Task<bool> ExistsByUsernameAsync(string username)
+        {
+            return await _context.Users.AnyAsync(u => u.Username == username);
+        }
+
+        public async Task<bool> ExistsByEmailAsync(string email)
+        {
+            return await _context.Users.AnyAsync(u => u.Email == email);
         }
     }
 }

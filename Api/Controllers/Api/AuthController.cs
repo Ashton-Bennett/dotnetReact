@@ -1,7 +1,6 @@
-﻿using Api.Models;
+﻿using Api.Models.DTOs;
 using Api.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers.Api
@@ -13,29 +12,33 @@ namespace Api.Controllers.Api
     {
         private readonly IUserService _userService;
         private readonly ITokenService _tokenService;
+        private readonly IAuthService _authService;
 
-        public AuthController(IUserService userService, ITokenService tokenService)
+        public AuthController(IUserService userService, ITokenService tokenService, IAuthService authService)
         {
             _userService = userService;
             _tokenService = tokenService;
+            _authService = authService;
         }
 
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginRequest model)
         {
+            var result = await _authService.LoginAsync(model.Email, model.Password);
 
-            var user = await _userService.ValidateUserAsync(model.Email, model.Password);
-            if (user == null)
-                return Unauthorized(new { message = "Invalid username or password." });
+            if (result == null)
+                return BadRequest("Failed to login");
 
-            var accessToken = _tokenService.GenerateAccessToken(user);
+            if (!result.Success || result.Data == null)
+                return BadRequest(new { message = result.ErrorMessage });
+
             var refreshToken = _tokenService.GenerateRefreshToken();
 
             // store refresh token securely (e.g., in DB)
-            await _userService.SaveRefreshTokenAsync(user.Id, refreshToken);
+            await _userService.SaveRefreshTokenAsync(result.Data.Id, refreshToken);
 
-            // send refresh token as HttpOnly cookie
+            // Send refresh token as HttpOnly cookie
             Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
             {
                 HttpOnly = true,
@@ -44,33 +47,37 @@ namespace Api.Controllers.Api
                 Expires = DateTime.UtcNow.AddDays(7)
             });
 
-            return Ok(new LoginResponse
+            var userResponse = new LoginResponse
             {
-                Email = user.Email,
-                Username = user.Username,
-                Roles = user.Roles,
-                AccessToken = accessToken
-            });
+                Email = result.Data.Email,
+                Username = result.Data.Username,
+                Roles = result.Data.Roles,
+                AccessToken = result.Data.AccessToken,
+                Id = result.Data.Id,
+            };
+
+            return Ok(userResponse);
         }
 
         [HttpPost("refresh")]
-        [AllowAnonymous]
         public async Task<IActionResult> Refresh()
         {
             var refreshToken = Request.Cookies["refreshToken"];
             if (string.IsNullOrEmpty(refreshToken))
-                return Unauthorized();
+            {
+                return Unauthorized(new { message = "Missing refresh token." });
+            }
 
-            var user = await _userService.GetUserByRefreshTokenAsync(refreshToken);
-            if (user == null)
-                return Unauthorized();
+            var result = await _authService.RefreshAsync(refreshToken);
 
-            var newAccessToken = _tokenService.GenerateAccessToken(user);
-            var newRefreshToken = _tokenService.GenerateRefreshToken();
+            if (result == null)
+                return Unauthorized(new { message = "Failed to refresh token." });
 
-            await _userService.ReplaceRefreshTokenAsync(user.Id, refreshToken, newRefreshToken);
+            if (!result.Success || result.Data == null)
+                return Unauthorized(new { message = result.ErrorMessage ?? "Invalid refresh token." });
+            
 
-            Response.Cookies.Append("refreshToken", newRefreshToken, new CookieOptions
+            Response.Cookies.Append("refreshToken", result.Data.RefreshToken, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
@@ -78,7 +85,36 @@ namespace Api.Controllers.Api
                 Expires = DateTime.UtcNow.AddDays(7)
             });
 
-            return Ok(new { AccessToken = newAccessToken });
+            return Ok(new { result.Data.AccessToken });
+        }
+
+        [HttpPost("validate")]
+        public async Task<IActionResult> Validate()
+        {
+            var refreshToken = Request.Cookies["refreshToken"];
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                return Unauthorized(new { message = "Missing refresh token." });
+            }
+
+            var result = await _authService.Validate(refreshToken);
+
+            if (result == null)
+                return Unauthorized(new { message = "Failed to refresh token." });
+
+            if (!result.Success || result.Data == null)
+                return Unauthorized(new { message = result.ErrorMessage ?? "Invalid refresh token." });
+
+            var userResponse = new LoginResponse
+            {
+                Email = result.Data.Email,
+                Username = result.Data.Username,
+                Roles = result.Data.Roles,
+                AccessToken = result.Data.AccessToken,
+                Id = result.Data.Id,
+            };
+
+            return Ok(userResponse);
         }
 
         [HttpPost("logout")]

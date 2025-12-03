@@ -1,4 +1,5 @@
-﻿using Api.Models;
+﻿using Api.Models.Data;
+using Api.Models.DTOs;
 
 namespace Api.Services
 {
@@ -7,14 +8,15 @@ namespace Api.Services
         Task<IEnumerable<User>> GetAllAsync();
 
         Task<User?> GetByIdAsync(int id);
+        Task<User?> GetByEmailAsync(string email);
 
-        Task<User> CreateAsync(User newUser);
+        Task<ServiceResult<User>> CreateAsync(User newUser);
 
         Task<bool> Delete(int id);
 
         Task<bool> UpdateAsync(int id, User newUser);
 
-        Task<User?> ValidateUserAsync(string email, string password);
+        Task<ServiceResult<object>> UpdatePasswordAsync(int id, string currentPasswordFromClient, string newPasswordFromClient);
 
         Task SaveRefreshTokenAsync(int userId, string refreshToken);
 
@@ -23,5 +25,7 @@ namespace Api.Services
         Task ReplaceRefreshTokenAsync(int userId, string oldRefreshToken, string newRefreshToken);
 
         Task RevokeRefreshTokenAsync(string refreshToken);
+
+        bool VerifyPassword(User user, string enteredPassword, string passwordHash);
     }
 }

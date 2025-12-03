@@ -1,4 +1,4 @@
-namespace Api.Models;
+namespace Api.Models.DTOs;
 
 public class ErrorViewModel
 {

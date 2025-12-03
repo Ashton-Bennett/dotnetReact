@@ -1,7 +1,7 @@
 using Api.Authorization;
 using Api.Data;
 using Api.Middleware;
-using Api.Models;
+using Api.Models.Data;
 using Api.Repositories;
 using Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -23,9 +23,9 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
     {
-        Title = "WeatherForecast API",
+        Title = "Base Application API",
         Version = "v1",
-        Description = "A simple API for weather forecasts"
+        Description = "Provides a modern starter API."
     });
 
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
@@ -58,6 +58,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddSingleton<IAuthorizationHandler, AdminOrSelfHandler>();
 
@@ -90,6 +91,7 @@ builder.Services.AddAuthorization(options =>
 
 
 var app = builder.Build();
+app.MapOpenApi();
 
 // Exception handling should be first
 app.UseExceptionHandler("/error");
@@ -102,6 +104,10 @@ app.UseRouting();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseDefaultFiles();
+app.UseStaticFiles();
+app.MapFallbackToFile("/index.html");
 
 // Swagger (only in dev)
 if (app.Environment.IsDevelopment())
@@ -143,6 +149,7 @@ if (app.Environment.IsDevelopment())
         string token = tokenService.GenerateAccessToken(fakeGuestUser); 
         Console.WriteLine("Swagger Guest Token:" + token);
     }
+
 }
 else
 {

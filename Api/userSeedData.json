@@ -4,7 +4,8 @@
       "Id": 1,
       "Username": "admin_user",
       "Roles": [ "Admin" ],
-      "Password": "AdminPass123!",
+      "Password": "AQAAAAIAAYagAAAAEInp1nccUV4Y0L3f108IEXGEi59qPH5bfdtjV5/awZNvmxar4v3Z8n5FUy/t4mM3ow==",
+      "_Password": "AdminPass123!",
       "DateOfBirth": "1980-01-15",
       "Email": "admin@SeedData.com"
     },
@@ -12,7 +13,8 @@
       "Id": 2,
       "Username": "manager_john",
       "Roles": [ "Manager" ],
-      "Password": "ManagerPass123!",
+      "Password": "AQAAAAIAAYagAAAAEAe9sU1RY4bpVn652yBAKS3OCMbvcSekZjakKlZTQcLe5yrd1OiOZEASxoihLdnfuw==",
+      "_Password": "ManagerPass123!",
       "DateOfBirth": "1985-05-22",
       "Email": "manager@SeedData.com"
     },
@@ -20,7 +22,8 @@
       "Id": 3,
       "Username": "user_sarah",
       "Roles": [ "User" ],
-      "Password": "UserPass123!",
+      "Password": "AQAAAAIAAYagAAAAEJ+BdEvItZuD8qawp63+oWWANdaek90czdvmg9po+nbNQ2PB1rSGNVtOYA9jvmokvw==",
+      "_Password": "UserPass123!",
       "DateOfBirth": "1990-09-12",
       "Email": "user@SeedData.com"
     },
@@ -28,7 +31,8 @@
       "Id": 4,
       "Username": "guest_mike",
       "Roles": [ "Guest" ],
-      "Password": "GuestPass123!",
+      "Password": "AQAAAAIAAYagAAAAEI6L9M8yG8bxckmPtDjF2hsCy+OS3KKBc1Byrv7eVOimB+c0jxL0tMCUdWGMO7L1rQ==",
+      "_Password": "GuestPass123!",
       "DateOfBirth": "2000-03-08",
       "Email": "guest@SeedData.com"
     }

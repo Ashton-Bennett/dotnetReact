@@ -13,8 +13,17 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.9" />
+    <PackageReference Include="NSwag.MSBuild" Version="14.6.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
   </ItemGroup>
+
+	<!--<Target Name="GenerateTypeScriptClient" AfterTargets="Build">
+		<Exec Command="dotnet nswag openapi2tsclient /input:https://localhost:7212/swagger/v1/swagger.json /output:../client/src/api/ModelsFromTheBackend.ts /template:Axios /GenerateClientClasses:true /GenerateDtoTypes:true /UseTransformOptions:true" />
+	</Target>-->
 
 </Project>
