@@ -8,7 +8,7 @@ namespace Api.Models.Data
 
         public string Username { get; set; } = string.Empty;
 
-        public IEnumerable<string> Roles { get; set; } = Array.Empty<string>();
+        public IEnumerable<string> Roles { get; set; } = new[] { "Guest" };
 
         public string Password { get; set; } = string.Empty;
 

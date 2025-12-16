@@ -1,16 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace reactTestApp.Controllers.Api
+namespace Api.Controllers.Api
 {
     [ApiController]
     [Route("api/Connection")]
     public class ConnectionController : ControllerBase
     {
 
-        public ConnectionController()
-        {
-
-        }
+        public ConnectionController(){}
 
         [HttpGet]
         public IActionResult Get()

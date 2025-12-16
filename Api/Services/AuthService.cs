@@ -7,11 +7,13 @@ namespace Api.Services
     {
         private readonly IUserService _userService;
         private readonly ITokenService _tokenService;
+        private readonly IPasswordService _passwordService;
 
-        public AuthService(IUserService userService, ITokenService tokenService)
+        public AuthService(IUserService userService, ITokenService tokenService, IPasswordService passwordService)
         {
             _userService = userService;
             _tokenService = tokenService;
+            _passwordService = passwordService;
         }
 
         public async Task<ServiceResult<LoginResponse>> LoginAsync(string email, string password)
@@ -22,7 +24,7 @@ namespace Api.Services
                 return ServiceResult<LoginResponse>.Fail("Invalid email");
             }
 
-            bool validPassword = _userService.VerifyPassword(user, password, user.Password);
+            bool validPassword = _passwordService.VerifyPassword(password, user.Password);
             if (!validPassword)
             {
                 return ServiceResult<LoginResponse>.Fail("Invalid password");

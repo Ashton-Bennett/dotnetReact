@@ -2,9 +2,9 @@
 {
     public enum UserRole
     {
-        Admin = 1,    // Full access to all resources
-        Manager = 2,  // View + edit within their department
-        User = 3,     // View/edit only their own data
-        Guest = 4     // Read-only, limited access
+        Admin = 1,    // Full access to all user viewing/editing resources
+        Manager = 2, 
+        User = 3,     
+        Guest = 4 
     }
 }

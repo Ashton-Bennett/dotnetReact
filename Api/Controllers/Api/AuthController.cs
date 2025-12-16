@@ -23,8 +23,9 @@ namespace Api.Controllers.Api
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginRequest model)
+        public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest model)
         {
+
             var result = await _authService.LoginAsync(model.Email, model.Password);
 
             if (result == null)
@@ -89,7 +90,7 @@ namespace Api.Controllers.Api
         }
 
         [HttpPost("validate")]
-        public async Task<IActionResult> Validate()
+        public async Task<ActionResult<LoginResponse>> Validate()
         {
             var refreshToken = Request.Cookies["refreshToken"];
             if (string.IsNullOrEmpty(refreshToken))

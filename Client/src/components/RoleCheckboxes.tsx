@@ -23,7 +23,7 @@ const RoleCheckBoxes = ({ userRoles, setUser }: RoleCheckBoxesProps) => {
       try {
         const reponse = await UserService.getRoles();
         if (reponse) {
-          setRoles(reponse.data);
+          setRoles(reponse.data.data);
         }
       } catch {
         console.error("Unable to get roles");

@@ -3,7 +3,6 @@ using Api.Models.DTOs;
 using Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Api.Enums;
 
 namespace Api.Controllers.Api
 {
@@ -16,70 +15,139 @@ namespace Api.Controllers.Api
 
         [HttpGet("GetAll")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<IEnumerable<User>>> GetAll()
+        public async Task<ActionResult> GetAll()
         {
-           var users = await _service.GetAllAsync();
+            ServiceResult<IEnumerable<User>> response = await _service.GetAllAsync();
+            if (response.Success)
+            {
+                var returnResults = new ApiSuccessResponse<IEnumerable<User>>
+                {
+                    Data = response.Data ?? Enumerable.Empty<User>()
+                };
+                return Ok(returnResults);
+            }
+            else
+            {
+                var returnResults = new ApiErrorResponse
+                {
+                    Message = response.ErrorMessage ?? "An error occurred while retrieving users."
+                };
 
-              return Ok(users);
+                return StatusCode(500, returnResults);
+            }
         }
+
 
         [HttpGet("GetRoles")]
         [Authorize(Roles = "Admin")]
-        public ActionResult<IEnumerable<RoleDto>> GetRoles()
+        public async Task<ActionResult> GetRolesAsync()
         {
-            var roles = EnumExtensions.ToRoleDtoList();
-            return Ok(roles);
+            ServiceResult<IEnumerable<RoleDto>> response = await _service.GetRolesAsync();
+            if (response.Success)
+            {
+                var returnResults = new ApiSuccessResponse<IEnumerable<RoleDto>>
+                {
+                    Data = response.Data ?? Enumerable.Empty<RoleDto>()
+                };
+
+                return Ok(returnResults);
+            }
+            else
+            {
+                var returnResults = new ApiErrorResponse
+                {
+                    Message = response.ErrorMessage ?? "An error occurred while retrieving user roles."
+                };
+
+                return StatusCode(500, returnResults);
+            }
         }
+
 
         [HttpGet("{id}")]
         [Authorize(Policy = "AdminOrSelf")]
+        [ProducesResponseType(typeof(ApiSuccessResponse<User>), StatusCodes.Status200OK)]  // Inlcude this once to get the types to swagger
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]  //Includes this once to get the types to swagger
         public async Task<ActionResult<User>> GetById(int id)
         {
-            var user = await _service.GetByIdAsync(id);
-            return user != null ? Ok(user) : NotFound();
+            ServiceResult<User> response = await _service.GetByIdAsync(id);
+            if (response.Success)
+            {
+
+                var returnResults = new ApiSuccessResponse<User>
+                {
+                    Data = response.Data
+                };
+
+                return Ok(returnResults);
+
+            }
+            else
+            {
+                var returnResults = new ApiErrorResponse
+                {
+                    Message = response.ErrorMessage ?? "User not found."
+                };
+                return NotFound(returnResults);
+            }
         }
 
         [HttpPost("Create")]
         public async Task<IActionResult> Create([FromBody] User newUser)
         {
-            var result = await _service.CreateAsync(newUser);
+            ServiceResult<User> response = await _service.CreateAsync(newUser);
+            if (response.Success)
+            {
 
-            if (!result.Success)
-                return BadRequest(new { message = result.ErrorMessage });
+                var returnResults = new ApiSuccessResponse<User>
+                {
+                    Data = response.Data
+                };
 
-            return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, new { Message = "success"});
+                return CreatedAtAction(nameof(GetById), new { id = returnResults.Data!.Id }, returnResults);
+            }
+            else
+            {
+                var returnResults = new ApiErrorResponse
+                {
+                    Message = response.ErrorMessage ?? "Unable to create user."
+                };
+                return BadRequest(returnResults);
+            }
         }
 
         [HttpDelete("{id}")]
         [Authorize(Policy = "AdminOrSelf")]
         public async Task<IActionResult> Delete(int id)
         {
-            var success = await _service.Delete(id);
+            ServiceResult<bool> response = await _service.Delete(id);
 
-            if (!success)
+            if (response.Success)
             {
-                return NotFound();  
+                return NoContent();
             }
 
-            return NoContent();
+            return NotFound(new ApiErrorResponse
+            {
+                Message = response.ErrorMessage ?? "Unable to delete user."
+            });
         }
 
         [HttpPut("{id}")]
         [Authorize(Policy = "AdminOrSelf")]
         public async Task<IActionResult> Update(int id, [FromBody] User newUser)
         {
-            if (!ModelState.IsValid) 
-            {
-                return BadRequest(ModelState);
-            } 
+            ServiceResult<bool> response = await _service.UpdateAsync(id, newUser);
 
-            var success = await _service.UpdateAsync(id, newUser);
-            if (!success) 
+            if (response.Success)
             {
-                return NotFound();
-            } 
+                return NoContent();
+            }
 
-            return NoContent();
+            return NotFound(new ApiErrorResponse
+            {
+                Message = response.ErrorMessage ?? "Unable to update user."
+            });
         }
 
 
@@ -87,12 +155,19 @@ namespace Api.Controllers.Api
         [Authorize(Policy = "AdminOrSelf")]
         public async Task<IActionResult> UpdatePassword(int id, [FromBody] Dictionary<string, string> collection)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var result = await _service.UpdatePasswordAsync(id, collection["currentPassword"], collection["newPassword"]);
+            ServiceResult<object> result = await _service.UpdatePasswordAsync(id, collection["currentPassword"], collection["newPassword"]);
 
             if (!result.Success)
-                return BadRequest(new { message = result.ErrorMessage });
+            {
+                var returnResults = new ApiErrorResponse
+                {
+                    Message = result.ErrorMessage ?? "Unable to update password."
+                };
+
+                return BadRequest(returnResults);
+            }
+                
 
             return Ok(result);
         }

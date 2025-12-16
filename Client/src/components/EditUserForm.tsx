@@ -26,7 +26,7 @@ const EditUserForm = ({ setFormToShow }: UpdatePasswordCardProps) => {
         if (!id) throw new Error("Missing ID");
         const reponse = await UserService.getById(id);
         if (isSuccessResponse(reponse)) {
-          setUser(reponse.data);
+          setUser(reponse.data.data);
         }
       } catch {
         setError("Failed to load user.");

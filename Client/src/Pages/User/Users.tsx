@@ -14,7 +14,7 @@ const Users = () => {
     try {
       const response = await UserService.getAll();
       if (isSuccessResponse(response)) {
-        setUsers(response.data);
+        setUsers(response.data.data);
       } else {
         setLoadingMessage("Error loading the users.");
       }

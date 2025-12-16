@@ -22,10 +22,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="UnitTests\Services\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Api\Api.csproj" />
   </ItemGroup>
 
