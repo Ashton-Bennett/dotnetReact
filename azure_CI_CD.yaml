@@ -1,0 +1,72 @@
+trigger:
+  - main
+
+pool:
+  vmImage: "ubuntu-latest"
+
+variables:
+  buildConfiguration: "Release"
+  frontendDir: "Client"
+  backendDir: "Api"
+
+steps:
+  # ---------- .NET ----------
+  - task: UseDotNet@2
+    inputs:
+      version: "9.0.x"
+      includePreviewVersions: true
+
+  - task: DotNetCoreCLI@2
+    displayName: "Restore .NET"
+    inputs:
+      command: "restore"
+      projects: "**/*.sln"
+
+  - task: DotNetCoreCLI@2
+    displayName: "Build .NET"
+    inputs:
+      command: "build"
+      projects: "**/*.sln"
+      arguments: "--configuration $(buildConfiguration) --no-restore"
+
+  - task: DotNetCoreCLI@2
+    displayName: "Run xUnit Tests"
+    inputs:
+      command: "test"
+      projects: "**/*Tests/*.csproj"
+      arguments: "--configuration $(buildConfiguration) --no-build"
+      publishTestResults: true
+
+  # ---------- Vite / React ----------
+  - task: NodeTool@0
+    inputs:
+      versionSpec: "20.x"
+
+  - script: |
+      cd $(frontendDir)
+      npm ci
+      npm run build
+    displayName: "Build Vite Frontend"
+
+  # ---------- Copy dist → wwwroot ----------
+  - script: |
+      rm -rf $(backendDir)/wwwroot/*
+      cp -R $(frontendDir)/dist/* $(backendDir)/wwwroot
+    displayName: "Copy Vite dist to wwwroot"
+
+  # ---------- Publish ----------
+  - task: DotNetCoreCLI@2
+    displayName: "Publish Backend"
+    inputs:
+      command: "publish"
+      projects: "$(backendDir)/*.csproj"
+      arguments: "--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)"
+
+  # ---------- Deploy ----------
+  - task: AzureWebApp@1
+    displayName: "Deploy to Azure App Service"
+    inputs:
+      azureSubscription: "dotnetReact"
+      appType: "webAppLinux"
+      appName: "starterApp"
+      package: "$(Build.ArtifactStagingDirectory)"

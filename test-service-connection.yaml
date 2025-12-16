@@ -1,0 +1,16 @@
+trigger:
+  - none # Don't trigger automatically
+
+pool:
+  vmImage: "ubuntu-latest"
+
+steps:
+  - task: AzureCLI@2
+    displayName: "Test Azure Service Connection"
+    inputs:
+      azureSubscription: "dotnetReact"
+      scriptType: "bash"
+      scriptLocation: "inlineScript"
+      inlineScript: |
+        echo "Logged in to Azure!"
+        az account show
