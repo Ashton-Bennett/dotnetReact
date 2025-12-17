@@ -73,12 +73,16 @@ builder.Services.AddAuthentication(options =>
 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
     var schemeConfig = builder.Configuration.GetSection("Authentication:Schemes:LocalAuthIssuer");
+
+    var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")
+             ?? builder.Configuration["Jwt:Key"];
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidIssuer = schemeConfig["ValidIssuer"],
         ValidAudiences = schemeConfig.GetSection("ValidAudiences").Get<string[]>(),
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+            Encoding.UTF8.GetBytes(jwtKey)),
         RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
     };
 });
@@ -102,15 +106,12 @@ app.UseExceptionHandler("/error");
 // Logging middleware early so it captures all requests
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseHttpsRedirection();
-app.MapStaticAssets();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseRouting();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseDefaultFiles();
-app.UseStaticFiles();
-app.MapFallbackToFile("/index.html");
 
 // Swagger (only in dev)
 if (app.Environment.IsDevelopment())
@@ -152,7 +153,6 @@ if (app.Environment.IsDevelopment())
         string token = tokenService.GenerateAccessToken(fakeGuestUser); 
         Console.WriteLine("Swagger Guest Token:" + token);
     }
-
 }
 else
 {
@@ -162,7 +162,7 @@ else
 app.MapControllers();
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}"
+    pattern: "{controller}/{action}/{id?}"
 );
 
 // DB seed data
@@ -178,6 +178,13 @@ using (var scope = app.Services.CreateScope())
         db.Users.AddRange(users!);
         db.SaveChanges();
     }
+}
+
+// SPA fallback MUST be last
+if (!app.Environment.IsDevelopment())
+{
+    app.MapStaticAssets();
+    app.MapFallbackToFile("index.html");
 }
 
 app.Run();

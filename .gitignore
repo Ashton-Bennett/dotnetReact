@@ -60,3 +60,5 @@ ScaffoldingReadMe.txt
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
+
+/Api/appsettings.Development.json

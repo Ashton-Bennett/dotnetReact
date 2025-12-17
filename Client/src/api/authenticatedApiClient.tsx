@@ -4,7 +4,7 @@ import isTokenExpired from "../utilities/isTokenExpired";
 import isSuccessResponse from "../utilities/isSuccessResponse";
 
 const authenticatedApiClient: AxiosInstance = axios.create({
-  baseURL: "http://localhost:5173/api",
+  baseURL: "/api",
   headers: {
     "Content-Type": "application/json",
   },
