@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:api": "npm run build && node ./scripts/copy-to-api.js",
     "client": "npm run gen-types && vite",
     "gen-types": "powershell -ExecutionPolicy Bypass -File generate-types.ps1",
     "server": "cd ../Api && dotnet run --launch-profile \"https\"",
