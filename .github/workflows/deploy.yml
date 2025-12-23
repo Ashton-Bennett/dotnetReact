@@ -1,0 +1,76 @@
+﻿name: Build, Test, and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. Set up Node.js for frontend
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      # 3. Install frontend dependencies
+      - name: Install frontend dependencies
+        working-directory: ./Client
+        run: npm install
+
+      # 4. Build frontend
+      - name: Build frontend
+        working-directory: ./Client
+        run: npm run build
+
+      # 5. Clean only frontend files in wwwroot
+      - name: Clean previous frontend assets
+        run: |
+          mkdir -p ./Api/wwwroot
+          # Remove only files and folders in wwwroot that exist in dist
+          for f in ./Client/dist/*; do
+            filename=$(basename "$f")
+            if [ -e "./Api/wwwroot/$filename" ]; then
+              rm -rf "./Api/wwwroot/$filename"
+            fi
+          done
+
+      # 6. Copy new frontend files to wwwroot
+      - name: Copy frontend to API wwwroot
+        run: cp -r ./Client/dist/* ./Api/wwwroot/
+
+      # 7. Setup .NET SDK
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+
+      # 8. Restore .NET dependencies
+      - name: Restore .NET dependencies
+        working-directory: ./Api
+        run: dotnet restore
+
+      # 9. Build .NET project
+      - name: Build .NET project
+        working-directory: ./Api
+        run: dotnet build --configuration Release --no-restore
+
+      # 10. Run tests
+      - name: Run tests
+        working-directory: ./Api
+        run: dotnet test --no-build --verbosity normal
+
+      # 11. Deploy to Azure
+      - name: Publish to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: starterApp
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./Api
