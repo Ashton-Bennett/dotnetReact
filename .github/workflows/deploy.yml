@@ -50,7 +50,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "9.0.x"
 
       # 8. Restore .NET dependencies
       - name: Restore .NET dependencies
@@ -64,8 +64,7 @@ jobs:
 
       # 10. Run tests
       - name: Run tests
-        working-directory: ./Api
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test Api.Tests/Api.Tests.csproj --verbosity normal
 
       # 11. Deploy to Azure
       - name: Publish to Azure Web App
