@@ -12,64 +12,53 @@ jobs:
     steps:
       # 1. Checkout code
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # 2. Set up Node.js for frontend
+      # 2. Setup Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
       # 3. Install frontend dependencies
       - name: Install frontend dependencies
         working-directory: ./Client
-        run: npm install
+        run: npm ci
 
       # 4. Build frontend
       - name: Build frontend
         working-directory: ./Client
         run: npm run build
 
-      # 5. Clean only frontend files in wwwroot
-      - name: Clean previous frontend assets
-        run: |
-          mkdir -p ./Api/wwwroot
-          # Remove only files and folders in wwwroot that exist in dist
-          for f in ./Client/dist/*; do
-            filename=$(basename "$f")
-            if [ -e "./Api/wwwroot/$filename" ]; then
-              rm -rf "./Api/wwwroot/$filename"
-            fi
-          done
-
-      # 6. Copy new frontend files to wwwroot
+      # 5. Replace frontend files in wwwroot
       - name: Copy frontend to API wwwroot
-        run: cp -r ./Client/dist/* ./Api/wwwroot/
+        run: |
+          mkdir -p Api/wwwroot
+          rm -rf Api/wwwroot/assets
+          cp -R Client/dist/* Api/wwwroot/
 
-      # 7. Setup .NET SDK
+      # 6. Setup .NET SDK
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "9.0.x"
 
-      # 8. Restore .NET dependencies
+      # 7. Restore dependencies
       - name: Restore .NET dependencies
-        working-directory: ./Api
-        run: dotnet restore
+        run: dotnet restore Api/Api.csproj
 
-      # 9. Build .NET project
-      - name: Build .NET project
-        working-directory: ./Api
-        run: dotnet build --configuration Release --no-restore
-
-      # 10. Run tests
+      # 8. Run tests (FAILS workflow if any test fails)
       - name: Run tests
-        run: dotnet test Api.Tests/Api.Tests.csproj --verbosity minimal
+        run: dotnet test --verbosity minimal
 
-      # 11. Deploy to Azure
-      - name: Publish to Azure Web App
+      # 9. Publish backend
+      - name: Publish
+        run: dotnet publish Api/Api.csproj -c Release -o publish
+
+      # 10. Deploy published output to Azure
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: starterApp
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: ./Api
+          package: ./publish
