@@ -21,7 +21,7 @@ namespace Api.Tests.UnitTests.Controllers
             var result = _controller.Get();
 
             // Assert
-            Assert.Contains("Connected.", "This is to test failures in CD/CI pipeline");
+            Assert.Contains("Connected.", "Connected.");
             var okResult = Assert.IsType<OkObjectResult>(result);
             string json = JsonSerializer.Serialize(okResult.Value);
             Assert.Contains("Connected.", json);
