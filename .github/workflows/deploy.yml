@@ -64,7 +64,7 @@ jobs:
 
       # 10. Run tests
       - name: Run tests
-        run: dotnet test Api.Tests/Api.Tests.csproj --verbosity normal
+        run: dotnet test Api.Tests/Api.Tests.csproj --verbosity minimal
 
       # 11. Deploy to Azure
       - name: Publish to Azure Web App
