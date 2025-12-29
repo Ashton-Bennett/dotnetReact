@@ -181,10 +181,9 @@ using (var scope = app.Services.CreateScope())
 }
 
 // SPA fallback MUST be last
-if (!app.Environment.IsDevelopment())
-{
+
     app.MapStaticAssets();
     app.MapFallbackToFile("index.html");
-}
+
 
 app.Run();
