@@ -21,7 +21,7 @@ namespace Api.Controllers.Api
             _authService = authService;
         }
 
-        [HttpPost("login")]
+        [HttpPost("Login")]
         [AllowAnonymous]
         public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest model)
         {
